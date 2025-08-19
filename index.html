@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OPEN REMOTE</title>
+<style>
+  body {
+    margin: 0;
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #f0f0f0, #d4d4d4);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+
+  h1 {
+    font-weight: bold;
+    border: 3px solid #333;
+    border-radius: 12px;
+    padding: 15px 30px;
+    background-color: #fff;
+    box-shadow: 2px 2px 8px rgba(0,0,0,0.2);
+    margin-bottom: 50px;
+  }
+
+  #openBtn {
+    font-size: 64px;
+    color: white; /* icona della casa bianca */
+    background: linear-gradient(145deg, #ff4d4d, #e60000); /* sfondo rosso */
+    border: 4px solid white; /* bordo bianco */
+    border-radius: 50%;
+    width: 140px;
+    height: 140px;
+    cursor: pointer;
+    box-shadow: 4px 4px 15px rgba(0,0,0,0.3);
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+
+  #openBtn:active {
+    transform: scale(0.95);
+    box-shadow: 2px 2px 8px rgba(0,0,0,0.2);
+  }
+
+  .switch-container {
+    margin-top: 40px;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+  }
+
+  .switch-container input[type="checkbox"] {
+    margin-left: 15px;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+  }
+</style>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+</head>
+<body>
+
+<h1>OPEN REMOTE</h1>
+
+<button id="openBtn">🏠</button>
+
+<div class="switch-container">
+  <span>Abilita Button1</span>
+  <input type="checkbox" id="btn1Switch" checked>
+</div>
+
+<script>
+  // ── CONFIG FIREBASE ──
+  const firebaseConfig = {
+    apiKey: "AIzaSyA7l-4CgbWFN36bc_38_5qBwKWlG5mPg7Y",
+    authDomain: "citofono-remote.firebaseapp.com",
+    databaseURL: "https://citofono-remote-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "citofono-remote"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  // ── LOGIN UTENTE ──
+  firebase.auth().signInWithEmailAndPassword("test@gmail.com", "admins")
+    .catch(err => console.log(err));
+
+  const deviceId = "ESP32-FC71FFB3A3A0"; // copia qui il DeviceID dal WiFiManager
+
+  // ── PULSANTE “APRI CITOFONO” ──
+  document.getElementById("openBtn").addEventListener("click", () => {
+    const timestamp = Date.now();
+    db.ref(`/devices/${deviceId}/cmd/pulseAt`).set(timestamp);
+  });
+
+  // ── SWITCH Button1 ──
+  const btn1Switch = document.getElementById("btn1Switch");
+
+  btn1Switch.addEventListener("change", () => {
+    db.ref(`/devices/${deviceId}/state/button1Enabled`).set(btn1Switch.checked);
+  });
+
+  // ── SINCRONIZZA SWITCH DAL DEVICE ──
+  db.ref(`/devices/${deviceId}/state/button1Enabled`).on('value', snapshot => {
+    const val = snapshot.val();
+    btn1Switch.checked = val;
+  });
+</script>
+
+</body>
+</html>
